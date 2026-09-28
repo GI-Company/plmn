@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Prevent cloud backup extraction of local vault database and sensitive cryptographic stores -->
+        <exclude domain="database" path="plmn_secure_vault.db" />
+        <exclude domain="database" path="plmn_secure_vault.db-wal" />
+        <exclude domain="database" path="plmn_secure_vault.db-shm" />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="root" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database" path="plmn_secure_vault.db" />
+        <exclude domain="database" path="plmn_secure_vault.db-wal" />
+        <exclude domain="database" path="plmn_secure_vault.db-shm" />
+        <exclude domain="sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>

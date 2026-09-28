@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Privacy Shield: Exclude all local encrypted databases and sensitive prefs from cloud auto-backup -->
+    <exclude domain="database" path="plmn_secure_vault.db" />
+    <exclude domain="database" path="plmn_secure_vault.db-wal" />
+    <exclude domain="database" path="plmn_secure_vault.db-shm" />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="root" path="." />
+</full-backup-content>

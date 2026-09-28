@@ -1,0 +1,45 @@
+{
+  "protocol_version": "1.0",
+  "key_algorithm": "ES256",
+  "empty_body": {
+    "raw_utf8": "",
+    "sha256_hex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "sample_json_body": {
+    "raw_utf8": "{\"model\":\"intent-1m\",\"messages\":[{\"role\":\"user\",\"content\":\"hello\"}]}",
+    "sha256_hex": "28301f70784ca07c0b754caab4240384deef245607d961c7b5c07595874b4a89"
+  },
+  "sample_streaming_json_body": {
+    "raw_utf8": "{\"model\":\"intent-1m\",\"messages\":[{\"role\":\"user\",\"content\":\"hello\"}],\"stream\":true}",
+    "sha256_hex": "7909206a0ad3aa84ba33ad11db66bd7236d1d8ac06d70d8a5fd57717905bf517"
+  },
+  "golden_get_models_vector": {
+    "protocol_version": "1.0",
+    "device_id": "PLMN-ANDROID-NODE-A1B2",
+    "method": "GET",
+    "canonical_path": "/v1/models",
+    "timestamp_ms": "1727450400000",
+    "nonce": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "body_sha256_hex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "expected_canonical_string": "1.0\nPLMN-ANDROID-NODE-A1B2\nGET\n/v1/models\n1727450400000\n9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "golden_post_chat_vector": {
+    "protocol_version": "1.0",
+    "device_id": "PLMN-ANDROID-NODE-A1B2",
+    "method": "POST",
+    "canonical_path": "/v1/chat/completions",
+    "timestamp_ms": "1727450400000",
+    "nonce": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "request_body_utf8": "{\"model\":\"intent-1m\",\"messages\":[{\"role\":\"user\",\"content\":\"hello\"}],\"stream\":true}",
+    "body_sha256_hex": "7909206a0ad3aa84ba33ad11db66bd7236d1d8ac06d70d8a5fd57717905bf517",
+    "expected_canonical_string": "1.0\nPLMN-ANDROID-NODE-A1B2\nPOST\n/v1/chat/completions\n1727450400000\n9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\n7909206a0ad3aa84ba33ad11db66bd7236d1d8ac06d70d8a5fd57717905bf517"
+  },
+  "golden_pairing_vector": {
+    "pairing_token": "PLMH-7892-AZ",
+    "device_id": "PLMN-ANDROID-NODE-A1B2",
+    "device_name": "Pixel 8 Pro",
+    "key_algorithm": "ES256",
+    "public_key_spki_base64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE4b2pL3x...",
+    "expected_pairing_body": "{\"pairing_token\":\"PLMH-7892-AZ\",\"device_id\":\"PLMN-ANDROID-NODE-A1B2\",\"device_name\":\"Pixel 8 Pro\",\"key_algorithm\":\"ES256\",\"public_key_spki\":\"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE4b2pL3x...\"}"
+  }
+}

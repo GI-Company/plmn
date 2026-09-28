@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">PLMN</string>
+    <string name="app_full_title">Private Language Model Node</string>
+    <string name="app_tagline">Self-sovereign private intelligence &amp; encrypted execution</string>
+</resources>

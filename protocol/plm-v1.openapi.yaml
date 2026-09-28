@@ -1,0 +1,420 @@
+openapi: 3.1.0
+info:
+  title: Private Language Model (PLM) Protocol Specification
+  description: Canonical OpenAPI 3.1 specification for Private Language Model Hub (PLMH) and Private Language Model Node (PLMN) interoperability over local networks.
+  version: "1.0.0"
+
+servers:
+  - url: http://192.168.1.100:8080
+    description: Default PLMH Desktop Hub Endpoint
+
+paths:
+  /v1/health:
+    get:
+      summary: Hub Health Check
+      description: Returns health status, server uptime, and hub version.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Hub operational
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /v1/capabilities:
+    get:
+      summary: Hub Capability Query
+      description: Query features supported by the hub (e.g., tools, vision, streaming, vault context).
+      operationId: getCapabilities
+      parameters:
+        - $ref: '#/components/parameters/HeaderProtocolVersion'
+        - $ref: '#/components/parameters/HeaderDeviceId'
+        - $ref: '#/components/parameters/HeaderTimestamp'
+        - $ref: '#/components/parameters/HeaderNonce'
+        - $ref: '#/components/parameters/HeaderSignatureAlgorithm'
+        - $ref: '#/components/parameters/HeaderSignature'
+      responses:
+        '200':
+          description: Hub capabilities object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderCapabilities'
+        '401':
+          description: Device signature missing or unverified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/models:
+    get:
+      summary: List Discovered Models
+      description: Returns list of model descriptors available on the hub.
+      operationId: listModels
+      parameters:
+        - $ref: '#/components/parameters/HeaderProtocolVersion'
+        - $ref: '#/components/parameters/HeaderDeviceId'
+        - $ref: '#/components/parameters/HeaderTimestamp'
+        - $ref: '#/components/parameters/HeaderNonce'
+        - $ref: '#/components/parameters/HeaderSignatureAlgorithm'
+        - $ref: '#/components/parameters/HeaderSignature'
+      responses:
+        '200':
+          description: Model list
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - object
+                  - data
+                properties:
+                  object:
+                    type: string
+                    example: "list"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ModelDescriptor'
+
+  /v1/pair:
+    post:
+      summary: Device Pairing & Public Key Registration
+      description: Registers an Android node's ES256 public key using a one-time pairing token.
+      operationId: pairDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PairingRequest'
+      responses:
+        '200':
+          description: Device paired successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PairingResponse'
+        '400':
+          description: Invalid or consumed pairing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Protocol or key algorithm mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/chat/completions:
+    post:
+      summary: Normalized Chat Inference (SSE Streaming)
+      description: Executes chat inference stream. Authenticated via ES256 device request signature headers.
+      operationId: streamChatCompletions
+      parameters:
+        - $ref: '#/components/parameters/HeaderProtocolVersion'
+        - $ref: '#/components/parameters/HeaderDeviceId'
+        - $ref: '#/components/parameters/HeaderTimestamp'
+        - $ref: '#/components/parameters/HeaderNonce'
+        - $ref: '#/components/parameters/HeaderSignatureAlgorithm'
+        - $ref: '#/components/parameters/HeaderSignature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+      responses:
+        '200':
+          description: Server-Sent Events (SSE) Stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE chunks prefixed with "data: "
+        '401':
+          description: Unverified device identity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Context budget exceeded or invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/devices:
+    get:
+      summary: List Paired Devices (Admin Only)
+      operationId: listDevices
+      parameters:
+        - $ref: '#/components/parameters/HeaderProtocolVersion'
+        - $ref: '#/components/parameters/HeaderDeviceId'
+        - $ref: '#/components/parameters/HeaderTimestamp'
+        - $ref: '#/components/parameters/HeaderNonce'
+        - $ref: '#/components/parameters/HeaderSignatureAlgorithm'
+        - $ref: '#/components/parameters/HeaderSignature'
+      responses:
+        '200':
+          description: List of paired devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeviceInfo'
+
+components:
+  parameters:
+    HeaderProtocolVersion:
+      name: X-PLM-Protocol-Version
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "1.0"
+    HeaderDeviceId:
+      name: X-PLM-Device-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "PLMN-ANDROID-NODE-A1B2"
+    HeaderTimestamp:
+      name: X-PLM-Timestamp
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "1727450400000"
+    HeaderNonce:
+      name: X-PLM-Nonce
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+    HeaderSignatureAlgorithm:
+      name: X-PLM-Signature-Algorithm
+      in: header
+      required: true
+      schema:
+        type: string
+        enum: ["ES256", "Ed25519"]
+        example: "ES256"
+    HeaderSignature:
+      name: X-PLM-Signature
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Base64 DER encoded ECDSA SHA-256 signature
+        example: "MEQCID3k...=="
+
+  schemas:
+    CapabilityState:
+      type: string
+      enum:
+        - SUPPORTED
+        - UNSUPPORTED
+        - UNKNOWN
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - hub_id
+        - protocol_version
+      properties:
+        status:
+          type: string
+          example: "ok"
+        hub_id:
+          type: string
+          example: "PLMH-HUB-DESKTOP-01"
+        protocol_version:
+          type: string
+          example: "1.0"
+        uptime_seconds:
+          type: integer
+          example: 86400
+
+    PairingRequest:
+      type: object
+      required:
+        - pairing_token
+        - device_id
+        - device_name
+        - key_algorithm
+        - public_key_spki
+      properties:
+        pairing_token:
+          type: string
+          description: One-time short pairing token entered by user
+          example: "PLMH-7892-AZ"
+        device_id:
+          type: string
+          example: "PLMN-ANDROID-NODE-A1B2"
+        device_name:
+          type: string
+          example: "Pixel 8 Pro"
+        key_algorithm:
+          type: string
+          enum: ["ES256", "Ed25519"]
+          example: "ES256"
+        public_key_spki:
+          type: string
+          description: Base64 SubjectPublicKeyInfo DER encoded public key
+          example: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE..."
+
+    PairingResponse:
+      type: object
+      required:
+        - status
+        - hub_id
+        - hub_name
+        - protocol_version
+        - hub_public_key_spki
+        - hub_key_algorithm
+      properties:
+        status:
+          type: string
+          example: "PAIRED"
+        hub_id:
+          type: string
+          example: "PLMH-DESKTOP-HUB-01"
+        hub_name:
+          type: string
+          example: "Home Workstation PLMH"
+        protocol_version:
+          type: string
+          example: "1.0"
+        hub_public_key_spki:
+          type: string
+          example: "MCowBQYDK2VwAyEA..."
+        hub_key_algorithm:
+          type: string
+          example: "Ed25519"
+
+    ProviderCapabilities:
+      type: object
+      properties:
+        chat:
+          $ref: '#/components/schemas/CapabilityState'
+        streaming:
+          $ref: '#/components/schemas/CapabilityState'
+        tools:
+          $ref: '#/components/schemas/CapabilityState'
+        structured_output:
+          $ref: '#/components/schemas/CapabilityState'
+        vision:
+          $ref: '#/components/schemas/CapabilityState'
+        model_discovery:
+          $ref: '#/components/schemas/CapabilityState'
+        vault_context:
+          $ref: '#/components/schemas/CapabilityState'
+        persistent_memory:
+          $ref: '#/components/schemas/CapabilityState'
+
+    ModelDescriptor:
+      type: object
+      required:
+        - id
+        - display_name
+      properties:
+        id:
+          type: string
+          example: "intent-1m"
+        display_name:
+          type: string
+          example: "INTENT 1M (PLMH)"
+        context_length:
+          type: integer
+          nullable: true
+          example: 4096
+        supports_streaming:
+          $ref: '#/components/schemas/CapabilityState'
+        supports_tools:
+          $ref: '#/components/schemas/CapabilityState'
+        supports_vision:
+          $ref: '#/components/schemas/CapabilityState'
+        supports_vault_context:
+          $ref: '#/components/schemas/CapabilityState'
+        supports_persistent_memory:
+          $ref: '#/components/schemas/CapabilityState'
+
+    ChatCompletionRequest:
+      type: object
+      required:
+        - model
+        - messages
+      properties:
+        model:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessageItem'
+        stream:
+          type: boolean
+          default: true
+        temperature:
+          type: number
+          format: float
+        max_tokens:
+          type: integer
+
+    ChatMessageItem:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum: [system, user, assistant, tool]
+        content:
+          type: string
+        name:
+          type: string
+
+    DeviceInfo:
+      type: object
+      required:
+        - device_id
+        - device_name
+        - key_algorithm
+      properties:
+        device_id:
+          type: string
+        device_name:
+          type: string
+        key_algorithm:
+          type: string
+        paired_at_ms:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "UNAUTHORIZED"
+        message:
+          type: string
+          example: "Device signature verification failed"
+        protocol_version:
+          type: string
+          example: "1.0"

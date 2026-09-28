@@ -1,0 +1,6 @@
+{
+  "name": "PLMN",
+  "description": "Private Language Model Node - self-sovereign private AI execution node, secure LAN endpoints, airgapped context vault, and zero-leakage prompt sanitization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
